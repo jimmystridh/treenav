@@ -65,11 +65,36 @@ impl Config {
         let default = Theme::default();
         Self {
             theme: Theme {
-                border: toml.theme.border.as_deref().and_then(parse_color).unwrap_or(default.border),
-                highlight_bg: toml.theme.highlight_bg.as_deref().and_then(parse_color).unwrap_or(default.highlight_bg),
-                starred: toml.theme.starred.as_deref().and_then(parse_color).unwrap_or(default.starred),
-                dim: toml.theme.dim.as_deref().and_then(parse_color).unwrap_or(default.dim),
-                text: toml.theme.text.as_deref().and_then(parse_color).unwrap_or(default.text),
+                border: toml
+                    .theme
+                    .border
+                    .as_deref()
+                    .and_then(parse_color)
+                    .unwrap_or(default.border),
+                highlight_bg: toml
+                    .theme
+                    .highlight_bg
+                    .as_deref()
+                    .and_then(parse_color)
+                    .unwrap_or(default.highlight_bg),
+                starred: toml
+                    .theme
+                    .starred
+                    .as_deref()
+                    .and_then(parse_color)
+                    .unwrap_or(default.starred),
+                dim: toml
+                    .theme
+                    .dim
+                    .as_deref()
+                    .and_then(parse_color)
+                    .unwrap_or(default.dim),
+                text: toml
+                    .theme
+                    .text
+                    .as_deref()
+                    .and_then(parse_color)
+                    .unwrap_or(default.text),
             },
         }
     }

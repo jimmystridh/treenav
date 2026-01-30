@@ -1,6 +1,9 @@
 use crate::{config::Config, size::SizeWorker, state::PersistentState, tree, ui};
 use color_eyre::Result;
-use crossterm::event::{self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseButton, MouseEvent, MouseEventKind};
+use crossterm::event::{
+    self, Event, KeyCode, KeyEvent, KeyEventKind, KeyModifiers, MouseButton, MouseEvent,
+    MouseEventKind,
+};
 use ratatui::{layout::Rect, prelude::*};
 use std::collections::HashMap;
 use std::fs::File;
@@ -23,7 +26,13 @@ fn fuzzy_score(haystack: &str, needle: &[char]) -> Option<u16> {
     for c in haystack.chars() {
         let is_separator = c == '/' || c == '.' || c == '_' || c == '-' || c == ' ';
         if needle_idx < needle.len() && c == needle[needle_idx] {
-            score += if prev_was_separator { 10 } else if prev_match { 5 } else { 1 };
+            score += if prev_was_separator {
+                10
+            } else if prev_match {
+                5
+            } else {
+                1
+            };
             needle_idx += 1;
             prev_match = true;
         } else {
@@ -130,7 +139,10 @@ impl App {
         })
     }
 
-    pub fn run(&mut self, terminal: &mut Terminal<CrosstermBackend<BufWriter<File>>>) -> Result<()> {
+    pub fn run(
+        &mut self,
+        terminal: &mut Terminal<CrosstermBackend<BufWriter<File>>>,
+    ) -> Result<()> {
         while !self.should_quit {
             // Poll for size calculation results
             self.size_worker.poll_results(&mut self.dir_sizes);
@@ -273,7 +285,10 @@ impl App {
             }
             KeyCode::Up | KeyCode::BackTab => {
                 if !self.search_matches.is_empty() {
-                    self.search_index = self.search_index.checked_sub(1).unwrap_or(self.search_matches.len() - 1);
+                    self.search_index = self
+                        .search_index
+                        .checked_sub(1)
+                        .unwrap_or(self.search_matches.len() - 1);
                     self.select_search_match();
                 }
             }
@@ -347,7 +362,8 @@ impl App {
                 {
                     let clicked_row = row - self.tree_area.y - 1;
                     let now = std::time::Instant::now();
-                    let is_double_click = now.duration_since(self.last_click_time).as_millis() < 400
+                    let is_double_click = now.duration_since(self.last_click_time).as_millis()
+                        < 400
                         && clicked_row == self.last_click_row;
 
                     self.last_click_time = now;
@@ -587,7 +603,8 @@ impl App {
         let query_lower = query.to_lowercase();
         let query_chars: Vec<char> = query_lower.chars().collect();
 
-        let mut matches: Vec<(PathBuf, u16)> = self.search_paths_cache
+        let mut matches: Vec<(PathBuf, u16)> = self
+            .search_paths_cache
             .iter()
             .filter_map(|path| {
                 let name = path.file_name()?.to_string_lossy().to_lowercase();
@@ -602,7 +619,8 @@ impl App {
         self.items = matches
             .iter()
             .map(|(path, _)| {
-                let name = path.file_name()
+                let name = path
+                    .file_name()
                     .map(|n| n.to_string_lossy().to_string())
                     .unwrap_or_else(|| path.display().to_string());
                 let icon = crate::icons::get_icon(path, false);
@@ -670,7 +688,8 @@ impl App {
     fn add_or_edit_bookmark(&mut self) {
         if let Some(selected) = self.get_selected_path() {
             if selected.is_dir() {
-                let existing_label = self.persistent_state
+                let existing_label = self
+                    .persistent_state
                     .get_bookmark(&selected)
                     .map(|b| b.label.clone())
                     .unwrap_or_default();

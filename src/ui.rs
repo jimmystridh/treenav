@@ -12,21 +12,14 @@ use std::io::{BufRead, BufReader};
 use tui_tree_widget::Tree;
 
 pub fn render(frame: &mut Frame, app: &mut App) {
-    let chunks = Layout::vertical([
-        Constraint::Min(3),
-        Constraint::Length(1),
-    ])
-    .split(frame.area());
+    let chunks = Layout::vertical([Constraint::Min(3), Constraint::Length(1)]).split(frame.area());
 
     let main_area = chunks[0];
     let footer_area = chunks[1];
 
     if app.show_preview {
-        let split = Layout::horizontal([
-            Constraint::Percentage(50),
-            Constraint::Percentage(50),
-        ])
-        .split(main_area);
+        let split = Layout::horizontal([Constraint::Percentage(50), Constraint::Percentage(50)])
+            .split(main_area);
 
         let tree_area = split[0];
         let preview_area = split[1];
@@ -69,10 +62,12 @@ fn render_tree(frame: &mut Frame, app: &mut App, area: Rect) {
     };
 
     let title_style = match app.view_mode {
-        ViewMode::Tree => Style::default().fg(theme.border).add_modifier(Modifier::BOLD),
-        ViewMode::Starred | ViewMode::Bookmarks | ViewMode::Recent => {
-            Style::default().fg(theme.starred).add_modifier(Modifier::BOLD)
-        }
+        ViewMode::Tree => Style::default()
+            .fg(theme.border)
+            .add_modifier(Modifier::BOLD),
+        ViewMode::Starred | ViewMode::Bookmarks | ViewMode::Recent => Style::default()
+            .fg(theme.starred)
+            .add_modifier(Modifier::BOLD),
     };
 
     let border_color = match app.view_mode {
@@ -150,7 +145,12 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
         .enumerate()
         .flat_map(|(i, (key, desc))| {
             let mut v = vec![
-                Span::styled(*key, Style::default().fg(theme.border).add_modifier(Modifier::BOLD)),
+                Span::styled(
+                    *key,
+                    Style::default()
+                        .fg(theme.border)
+                        .add_modifier(Modifier::BOLD),
+                ),
                 Span::styled(format!(" {} ", desc), Style::default().fg(theme.dim)),
             ];
             if i < keys.len() - 1 {
@@ -160,8 +160,8 @@ fn render_footer(frame: &mut Frame, app: &App, area: Rect) {
         })
         .collect();
 
-    let footer = Paragraph::new(Line::from(spans))
-        .style(Style::default().bg(Color::Rgb(20, 20, 30)));
+    let footer =
+        Paragraph::new(Line::from(spans)).style(Style::default().bg(Color::Rgb(20, 20, 30)));
 
     frame.render_widget(footer, area);
 }
@@ -183,11 +183,24 @@ fn render_help(frame: &mut Frame, theme: &Theme) {
 
     let help_text = vec![
         Line::from(vec![
-            Span::styled("  treenav", Style::default().fg(theme.border).add_modifier(Modifier::BOLD)),
-            Span::styled(" - Terminal Directory Navigator", Style::default().fg(theme.dim)),
+            Span::styled(
+                "  treenav",
+                Style::default()
+                    .fg(theme.border)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled(
+                " - Terminal Directory Navigator",
+                Style::default().fg(theme.dim),
+            ),
         ]),
         Line::from(""),
-        Line::styled("  NAVIGATION", Style::default().fg(theme.starred).add_modifier(Modifier::BOLD)),
+        Line::styled(
+            "  NAVIGATION",
+            Style::default()
+                .fg(theme.starred)
+                .add_modifier(Modifier::BOLD),
+        ),
         help_line("↑ / k", "Move up", theme),
         help_line("↓ / j", "Move down", theme),
         help_line("← / h", "Collapse directory / go to parent", theme),
@@ -198,7 +211,12 @@ fn render_help(frame: &mut Frame, theme: &Theme) {
         help_line("PgUp/PgDn", "Page up/down", theme),
         help_line("Ctrl+u/d", "Half page up/down", theme),
         Line::from(""),
-        Line::styled("  ACTIONS", Style::default().fg(theme.starred).add_modifier(Modifier::BOLD)),
+        Line::styled(
+            "  ACTIONS",
+            Style::default()
+                .fg(theme.starred)
+                .add_modifier(Modifier::BOLD),
+        ),
         help_line("Enter", "cd to selected directory and exit", theme),
         help_line("s", "Toggle star on directory", theme),
         help_line("S", "Switch to/from starred view", theme),
@@ -211,7 +229,12 @@ fn render_help(frame: &mut Frame, theme: &Theme) {
         help_line("q / Ctrl+c", "Quit without changing directory", theme),
         help_line("?", "Toggle this help", theme),
         Line::from(""),
-        Line::styled("  Press any key to close", Style::default().fg(theme.dim).add_modifier(Modifier::ITALIC)),
+        Line::styled(
+            "  Press any key to close",
+            Style::default()
+                .fg(theme.dim)
+                .add_modifier(Modifier::ITALIC),
+        ),
     ];
 
     let help = Paragraph::new(help_text)
@@ -220,7 +243,11 @@ fn render_help(frame: &mut Frame, theme: &Theme) {
                 .borders(Borders::ALL)
                 .border_style(Style::default().fg(theme.border))
                 .title(" Help ")
-                .title_style(Style::default().fg(theme.border).add_modifier(Modifier::BOLD))
+                .title_style(
+                    Style::default()
+                        .fg(theme.border)
+                        .add_modifier(Modifier::BOLD),
+                )
                 .style(Style::default().bg(Color::Rgb(15, 15, 25))),
         )
         .wrap(Wrap { trim: false });
@@ -241,12 +268,18 @@ fn render_preview(frame: &mut Frame, app: &App, area: Rect) {
 
     let (title, content) = match selected {
         Some(ref path) if path.is_dir() => {
-            let title = format!(" {} ", path.file_name().unwrap_or_default().to_string_lossy());
+            let title = format!(
+                " {} ",
+                path.file_name().unwrap_or_default().to_string_lossy()
+            );
             let entries: Vec<String> = fs::read_dir(path)
                 .map(|rd| {
                     let mut items: Vec<String> = rd
                         .filter_map(|e| e.ok())
-                        .filter(|e| app.persistent_state.show_hidden || !e.file_name().to_string_lossy().starts_with('.'))
+                        .filter(|e| {
+                            app.persistent_state.show_hidden
+                                || !e.file_name().to_string_lossy().starts_with('.')
+                        })
                         .map(|e| {
                             let name = e.file_name().to_string_lossy().to_string();
                             if e.path().is_dir() {
@@ -271,7 +304,10 @@ fn render_preview(frame: &mut Frame, app: &App, area: Rect) {
             (title, entries.join("\n"))
         }
         Some(ref path) if path.is_file() => {
-            let title = format!(" {} ", path.file_name().unwrap_or_default().to_string_lossy());
+            let title = format!(
+                " {} ",
+                path.file_name().unwrap_or_default().to_string_lossy()
+            );
             let content = fs::File::open(path)
                 .ok()
                 .map(|f| {
@@ -285,14 +321,21 @@ fn render_preview(frame: &mut Frame, app: &App, area: Rect) {
                 .unwrap_or_else(|| "[Unable to read file]".to_string());
             (title, content)
         }
-        _ => (" Preview ".to_string(), "Select a file or directory".to_string()),
+        _ => (
+            " Preview ".to_string(),
+            "Select a file or directory".to_string(),
+        ),
     };
 
     let block = Block::default()
         .borders(Borders::ALL)
         .border_style(Style::default().fg(theme.border))
         .title(title)
-        .title_style(Style::default().fg(theme.border).add_modifier(Modifier::BOLD));
+        .title_style(
+            Style::default()
+                .fg(theme.border)
+                .add_modifier(Modifier::BOLD),
+        );
 
     let paragraph = Paragraph::new(content)
         .style(Style::default().fg(theme.dim))
@@ -323,8 +366,7 @@ fn render_search_bar(frame: &mut Frame, app: &App, area: Rect) {
         Span::styled(&count_text, Style::default().fg(theme.dim)),
     ]);
 
-    let input = Paragraph::new(line)
-        .style(Style::default().bg(Color::Rgb(30, 30, 40)));
+    let input = Paragraph::new(line).style(Style::default().bg(Color::Rgb(30, 30, 40)));
 
     frame.render_widget(input, area);
 
@@ -348,7 +390,8 @@ fn render_bookmark_input(frame: &mut Frame, app: &App) {
 
     frame.render_widget(Clear, popup_area);
 
-    let path_name = app.bookmark_path
+    let path_name = app
+        .bookmark_path
         .as_ref()
         .and_then(|p| p.file_name())
         .map(|n| n.to_string_lossy().to_string())
@@ -359,17 +402,17 @@ fn render_bookmark_input(frame: &mut Frame, app: &App) {
         .borders(Borders::ALL)
         .border_style(Style::default().fg(theme.starred))
         .title(title)
-        .title_style(Style::default().fg(theme.starred).add_modifier(Modifier::BOLD))
+        .title_style(
+            Style::default()
+                .fg(theme.starred)
+                .add_modifier(Modifier::BOLD),
+        )
         .style(Style::default().bg(Color::Rgb(15, 15, 25)));
 
     let inner = block.inner(popup_area);
     frame.render_widget(block, popup_area);
 
-    let chunks = Layout::vertical([
-        Constraint::Length(1),
-        Constraint::Length(1),
-    ])
-    .split(inner);
+    let chunks = Layout::vertical([Constraint::Length(1), Constraint::Length(1)]).split(inner);
 
     // Label prompt
     frame.render_widget(
