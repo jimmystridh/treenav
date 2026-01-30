@@ -31,11 +31,9 @@ pub fn format_entry_name(
     let size_str = if is_expanded && path.is_dir() {
         dir_sizes
             .and_then(|sizes| sizes.get(&path.to_path_buf()))
-            .map(|size| {
-                match size {
-                    Some(bytes) => format!(" [{}]", size::format_size(*bytes)),
-                    None => " [...]".to_string(),
-                }
+            .map(|size| match size {
+                Some(bytes) => format!(" [{}]", size::format_size(*bytes)),
+                None => " [...]".to_string(),
             })
             .unwrap_or_default()
     } else {
@@ -74,11 +72,8 @@ pub fn build_tree_item(
 
     if path.is_dir() && is_expanded {
         match load_children(path, expanded_dirs, starred_dirs, show_hidden, dir_sizes) {
-            Ok(children) => {
-                TreeItem::new(path.to_path_buf(), name, children).map_err(|e| {
-                    io::Error::other(format!("Tree item error: {}", e))
-                })
-            }
+            Ok(children) => TreeItem::new(path.to_path_buf(), name, children)
+                .map_err(|e| io::Error::other(format!("Tree item error: {}", e))),
             Err(e) => {
                 let error_name = format!("{} [{}]", name, format_error(&e));
                 Ok(TreeItem::new_leaf(path.to_path_buf(), error_name))
@@ -106,7 +101,9 @@ fn load_children(
 
     let children: Vec<TreeItem<'static, PathBuf>> = entries
         .iter()
-        .filter_map(|p| build_tree_item(p, expanded_dirs, starred_dirs, show_hidden, dir_sizes).ok())
+        .filter_map(|p| {
+            build_tree_item(p, expanded_dirs, starred_dirs, show_hidden, dir_sizes).ok()
+        })
         .collect();
 
     Ok(children)
@@ -137,13 +134,17 @@ pub fn build_tree(
 
     let items: Vec<TreeItem<'static, PathBuf>> = entries
         .iter()
-        .filter_map(|p| build_tree_item(p, expanded_dirs, starred_dirs, show_hidden, dir_sizes).ok())
+        .filter_map(|p| {
+            build_tree_item(p, expanded_dirs, starred_dirs, show_hidden, dir_sizes).ok()
+        })
         .collect();
 
     Ok(items)
 }
 
-pub fn build_starred_list(starred_dirs: &HashSet<PathBuf>) -> io::Result<Vec<TreeItem<'static, PathBuf>>> {
+pub fn build_starred_list(
+    starred_dirs: &HashSet<PathBuf>,
+) -> io::Result<Vec<TreeItem<'static, PathBuf>>> {
     let mut dirs: Vec<PathBuf> = starred_dirs.iter().cloned().collect();
     dirs.sort_by(|a, b| {
         let a_name = a.file_name().map(|n| n.to_ascii_lowercase());
@@ -171,7 +172,11 @@ pub fn build_bookmarks_list(bookmarks: &[Bookmark]) -> io::Result<Vec<TreeItem<'
             let display = if b.label.is_empty() {
                 format!("📌 {}", b.path.display())
             } else {
-                format!("📌 {} ({})", b.label, b.path.file_name().unwrap_or_default().to_string_lossy())
+                format!(
+                    "📌 {} ({})",
+                    b.label,
+                    b.path.file_name().unwrap_or_default().to_string_lossy()
+                )
             };
             TreeItem::new_leaf(b.path.clone(), display)
         })
@@ -180,7 +185,9 @@ pub fn build_bookmarks_list(bookmarks: &[Bookmark]) -> io::Result<Vec<TreeItem<'
     Ok(items)
 }
 
-pub fn build_recent_list(recent_dirs: &VecDeque<PathBuf>) -> io::Result<Vec<TreeItem<'static, PathBuf>>> {
+pub fn build_recent_list(
+    recent_dirs: &VecDeque<PathBuf>,
+) -> io::Result<Vec<TreeItem<'static, PathBuf>>> {
     let items: Vec<TreeItem<'static, PathBuf>> = recent_dirs
         .iter()
         .filter(|p| p.exists())
