@@ -14,6 +14,10 @@ use tui_input::backend::crossterm::EventHandler;
 use tui_input::Input;
 use tui_tree_widget::{TreeItem, TreeState};
 
+fn input_event_from_key(key: KeyEvent) -> Event {
+    Event::Key(key)
+}
+
 fn fuzzy_score(haystack: &str, needle: &[char]) -> Option<u16> {
     if needle.is_empty() {
         return Some(0);
@@ -293,12 +297,7 @@ impl App {
                 }
             }
             _ => {
-                let crossterm_event = crossterm::event::Event::Key(crossterm::event::KeyEvent {
-                    code: key.code,
-                    modifiers: key.modifiers,
-                    kind: crossterm::event::KeyEventKind::Press,
-                    state: crossterm::event::KeyEventState::NONE,
-                });
+                let crossterm_event = input_event_from_key(key);
                 self.search_input.handle_event(&crossterm_event);
                 self.update_search_matches();
                 self.select_search_match();
@@ -332,12 +331,7 @@ impl App {
                 self.bookmark_input = Input::default();
             }
             _ => {
-                let crossterm_event = crossterm::event::Event::Key(crossterm::event::KeyEvent {
-                    code: key.code,
-                    modifiers: key.modifiers,
-                    kind: crossterm::event::KeyEventKind::Press,
-                    state: crossterm::event::KeyEventState::NONE,
-                });
+                let crossterm_event = input_event_from_key(key);
                 self.bookmark_input.handle_event(&crossterm_event);
             }
         }
@@ -761,5 +755,23 @@ impl App {
                 self.tree_state.select_first();
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crossterm::event::KeyEventState;
+
+    #[test]
+    fn input_event_from_key_preserves_crossterm_key_state() {
+        let key = KeyEvent {
+            code: KeyCode::Char('å'),
+            modifiers: KeyModifiers::CONTROL | KeyModifiers::ALT,
+            kind: KeyEventKind::Press,
+            state: KeyEventState::CAPS_LOCK | KeyEventState::NUM_LOCK,
+        };
+
+        assert_eq!(input_event_from_key(key), Event::Key(key));
     }
 }
